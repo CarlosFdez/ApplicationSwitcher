@@ -340,3 +340,5 @@ xcuserdata/
 *.moved-aside
 *.xccheckout
 *.xcscmblueprint
+
+CMakeSettings.json
