@@ -1,0 +1,3 @@
+file from https://github.com/nlohmann/json, which is too big to create a submodule of.
+
+Version is v3.0.0

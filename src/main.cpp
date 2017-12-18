@@ -1,8 +1,12 @@
 #include <windows.h>
 #include <Psapi.h>
 #include <iostream>
+#include <fstream>
+#include <vector>
 
-#include "processes.h"
+#include "processes.hpp"
+#include "switcher.hpp"
+#include "configreader.hpp"
 
 using namespace std;
 
@@ -18,8 +22,13 @@ void printAll() {
 }
 
 int main(void) {
-	printAll();
+	string filepath = "D:\\Programming\\C++\\ApplicationSwitcher\\config.json";
+	auto entries = readConfig(filepath);
 
-	int x;
-	cin >> x;
+	ApplicationSwitcher switcher(entries);
+	switcher.switchTo("Firefox");
+
+	cin.get();
+
+	return 0;
 }

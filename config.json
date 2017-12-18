@@ -1,0 +1,25 @@
+[
+	{
+		"name": "Firefox",
+		"key": "CTRL+ALT+SHIFT+1",
+		"search": [{
+			"className": "MozillaWindowClass"
+		}]
+	},
+	{
+		"name": "Work Tool",
+		"key": "CTRL+ALT+SHIFT+2",
+		"search": [
+			{
+				"filename": "devenv.exe"
+			}
+		]
+	},
+	{
+		"name": "Discord",
+		"key": "CTRL+ALT+SHIFT+3",
+		"search": [{
+			"filename": "Discord.exe"
+		}]
+	}
+]

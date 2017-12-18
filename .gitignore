@@ -341,4 +341,5 @@ xcuserdata/
 *.xccheckout
 *.xcscmblueprint
 
+enc_temp_folder
 CMakeSettings.json
