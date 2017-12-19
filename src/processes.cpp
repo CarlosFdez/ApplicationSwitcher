@@ -43,7 +43,7 @@ Application getApplicationForWindow(HWND hwnd) {
 	result.windowHandle = hwnd;
 	result.className = std::string(class_name);
 	result.title = std::string(title);
-	result.executable = std::string(filename);
+	result.path = std::string(filename);
 
 	return result;
 }
@@ -55,8 +55,7 @@ BOOL CALLBACK _processSingleWindow(HWND hwnd, LPARAM lParam) {
 		return TRUE;
 	}
 
-	// Tool windows should not be displayed either, these do not appear in the
-	// task bar.
+	// Tool windows should not be displayed either, these do not appear in the task bar.
 	if (GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW) {
 		return TRUE;
 	}

@@ -6,7 +6,24 @@
 
 using namespace std;
 
-ApplicationSwitcher::ApplicationSwitcher(const vector<SwitcherEntry> &entries) {
+ApplicationFilter createUnionFilter(const vector<ApplicationFilter>& filters) {
+	if (filters.empty()) {
+		return [](Application app) { return false; };
+	}
+	else {
+		// return a "match at least once". Copy the list internally
+		return [=](Application test) {
+			for (auto& filter : filters) {
+				if (filter(test)) {
+					return true;
+				}
+			}
+			return false;
+		};
+	}
+}
+
+ApplicationSwitcher::ApplicationSwitcher(const vector<SwitcherEntry>& entries) {
 	for (auto entry : entries) {
 		this->entries.push_back(entry);
 
@@ -14,7 +31,7 @@ ApplicationSwitcher::ApplicationSwitcher(const vector<SwitcherEntry> &entries) {
 	}
 }
 
-void ApplicationSwitcher::switchTo(const string &name) {
+void ApplicationSwitcher::switchTo(const string& name) {
 	if (entryByName.find(name) == entryByName.end()) {
 		throw new std::runtime_error("Entry does not exist");
 	}

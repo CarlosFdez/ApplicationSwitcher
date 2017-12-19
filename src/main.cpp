@@ -16,13 +16,13 @@ void printAll() {
 	for (auto &entry : results) {
 		cout << "Window title: " << entry.title << endl;
 		cout << "Class Name: " << entry.className << endl;
-		cout << "Executable: " << entry.executable << endl;
+		cout << "Executable: " << entry.path << endl;
 		cout << endl;
 	}
 }
 
 int main(void) {
-	string filepath = "D:\\Programming\\C++\\ApplicationSwitcher\\config.json";
+	string filepath = "config.json";
 	auto entries = readConfig(filepath);
 
 	ApplicationSwitcher switcher(entries);

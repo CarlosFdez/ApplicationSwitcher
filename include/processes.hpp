@@ -14,7 +14,7 @@ struct Application {
 	HWND windowHandle;
 	std::string title;
 	std::string className;
-	std::string executable;
+	std::string path;
 
 	/* Moves this application to the front using the window handle */
 	void toFront();

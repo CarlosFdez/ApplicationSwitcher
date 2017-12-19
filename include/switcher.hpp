@@ -9,6 +9,9 @@
 
 using ApplicationFilter = std::function<bool(Application)>;
 
+/* Creates a new application filter based on a list of application filters */
+ApplicationFilter createUnionFilter(const std::vector<ApplicationFilter>& filters);
+
 /*
 Defines a structure used to define the behavior of the ApplicationSwitcher
 for a single application. Currently its just a name and a check function.
@@ -28,7 +31,7 @@ This class needs to be used manually using the switchTo function.
 */
 class ApplicationSwitcher {
 public:
-	ApplicationSwitcher(const std::vector<SwitcherEntry> &entries);
+	ApplicationSwitcher(const std::vector<SwitcherEntry>& entries);
 	ApplicationSwitcher(const ApplicationSwitcher& other) = default;
 	ApplicationSwitcher(ApplicationSwitcher&& other) = default;
 
