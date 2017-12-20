@@ -51,8 +51,10 @@ vector<SwitcherEntry> readConfig(const string& filepath) {
 		try {
 			SwitcherEntry entry;
 
-			entry.name = item.at("name").get<string>();
+			entry.name = item["name"].get<string>();
 			cout << "Loading entry " << entry.name << endl;
+
+			entry.hotkey = item["key"].get<string>();
 
 			vector<ApplicationFilter> filterList;
 			for (json::value_type& filterProps : item["search"]) {
@@ -71,6 +73,8 @@ vector<SwitcherEntry> readConfig(const string& filepath) {
 			cerr << "Error loading entry: " << ex.what() << endl;
 		}
 	}
+
+	cout << "entries loaded" << endl << endl;
 
 	return results;
 }

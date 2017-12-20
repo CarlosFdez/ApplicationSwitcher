@@ -26,11 +26,17 @@ int main(void) {
 	string filepath = "config.json";
 	auto entries = readConfig(filepath);
 
-	ApplicationSwitcher switcher(entries);
-	switcher.switchTo("Firefox");
-
+	ApplicationSwitcher switcher;
 	HotkeySystem hotkeys;
-	hotkeys.registerKey("CTRL+ALT+1", []() { cout << "key pressed"; });
+
+	for (SwitcherEntry &entry : entries) {
+		switcher.addEntry(entry.name, entry.filter);
+		hotkeys.registerKey(entry.hotkey, [&switcher, entry]() {
+			cout << "Switching to " << entry.name << endl;
+			switcher.switchTo(entry.name);
+		});
+	}
+
 	hotkeys.processMessages();
 
 	cin.get();

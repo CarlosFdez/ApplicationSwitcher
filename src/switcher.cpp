@@ -23,12 +23,8 @@ ApplicationFilter createUnionFilter(const vector<ApplicationFilter>& filters) {
 	}
 }
 
-ApplicationSwitcher::ApplicationSwitcher(const vector<SwitcherEntry>& entries) {
-	for (auto entry : entries) {
-		this->entries.push_back(entry);
-
-		this->entryByName[entry.name] = entry;
-	}
+void ApplicationSwitcher::addEntry(const string& name, const ApplicationFilter& filter) {
+	this->entryByName[name] = filter;
 }
 
 void ApplicationSwitcher::switchTo(const string& name) {
@@ -36,12 +32,12 @@ void ApplicationSwitcher::switchTo(const string& name) {
 		throw new std::runtime_error("Entry does not exist");
 	}
 
-	auto entry = entryByName[name];
+	ApplicationFilter& filter = entryByName[name];
 
 	auto applications = getOpenApplications();
 
-	for (auto &app : applications) {
-		if (!entry.matches(app)) {
+	for (Application &app : applications) {
+		if (!filter(app)) {
 			continue;
 		}
 
