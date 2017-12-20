@@ -14,6 +14,9 @@ struct Application {
 	HWND windowHandle;
 	std::string title;
 	std::string className;
+
+	/* The path of the executable running the application. 
+	All path delimiters are replaced with / for consistency. */
 	std::string path;
 
 	/* Moves this application to the front using the window handle */

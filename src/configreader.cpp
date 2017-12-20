@@ -22,12 +22,30 @@ class SingleMatcher {
 public:
 	SingleMatcher(SingleMatcherFilters settings) : settings{ settings } {}
 	bool operator()(Application test) {
+		// if className is defined, we check class name
 		auto className = this->settings.className;
 		if (className && test.className != className.value()) {
 			return false;
 		}
 
-		// todo: executable/filename/others
+		// if filename is defined, we check the last part of the filename
+		auto filename = this->settings.filename;
+		if (filename) {
+			int lastSlash = test.path.find_last_of('/');
+			if (lastSlash == string::npos) {
+				lastSlash = 0; // we want the whole string
+			}
+			else {
+				lastSlash++; // we want the part after the slash
+			}
+
+			string testFile = test.path.substr(lastSlash);
+			if (testFile != filename.value()) {
+				return false;
+			}
+		}
+
+		// todo: path/others
 
 		return true;
 	}

@@ -1,5 +1,7 @@
 #include "processes.hpp"
 
+#include <algorithm>
+
 using namespace std;
 
 BOOL CALLBACK _processSingleWindow(HWND hwnd, LPARAM lParam);
@@ -44,6 +46,8 @@ Application getApplicationForWindow(HWND hwnd) {
 	result.className = std::string(class_name);
 	result.title = std::string(title);
 	result.path = std::string(filename);
+
+	replace(result.path.begin(), result.path.end(), '\\', '/');
 
 	return result;
 }
