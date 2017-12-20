@@ -35,8 +35,7 @@ private:
 	SingleMatcherFilters settings;
 };
 
-vector<SwitcherEntry> readConfig(const string& filepath)
-{
+vector<SwitcherEntry> readConfig(const string& filepath) {
 	cout << "Reading config file..." << endl;
 	ifstream fileReader(filepath);
 

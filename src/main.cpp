@@ -7,6 +7,7 @@
 #include "processes.hpp"
 #include "switcher.hpp"
 #include "configreader.hpp"
+#include "hotkeys.hpp"
 
 using namespace std;
 
@@ -27,6 +28,10 @@ int main(void) {
 
 	ApplicationSwitcher switcher(entries);
 	switcher.switchTo("Firefox");
+
+	HotkeySystem hotkeys;
+	hotkeys.registerKey("CTRL+ALT+1", []() { cout << "key pressed"; });
+	hotkeys.processMessages();
 
 	cin.get();
 
