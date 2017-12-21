@@ -18,5 +18,10 @@ file(GLOB_RECURSE source_list "src/*")
 
 add_executable(
     ${PROJECT_NAME}
+	#WIN32
     ${source_list}
 )
+
+if(WIN32)
+	target_link_libraries(${PROJECT_NAME} Comctl32)
+endif()

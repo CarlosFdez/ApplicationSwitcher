@@ -19,15 +19,20 @@ void HotkeySystem::registerKey(const string& key, KeyCallback onUse) {
 void HotkeySystem::processMessages() {
 	MSG msg = { 0 };
 	while (GetMessage(&msg, NULL, 0, 0) != 0) {
-		if (msg.message != WM_HOTKEY) {
-			continue;
-		}
+		this->processMessage(msg);
+	}
+}
 
-		int hotkeyId = msg.wParam;
-		if (bindingMap.find(hotkeyId) != bindingMap.end()) {
-			// execute registered callback function
-			this->bindingMap[hotkeyId]();
-		}
+
+void HotkeySystem::processMessage(const MSG& msg) {
+	if (msg.message != WM_HOTKEY) {
+		return;
+	}
+
+	int hotkeyId = msg.wParam;
+	if (bindingMap.find(hotkeyId) != bindingMap.end()) {
+		// execute registered callback function
+		this->bindingMap[hotkeyId]();
 	}
 }
 

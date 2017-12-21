@@ -26,6 +26,7 @@ public:
 	void registerKey(const std::string& key, KeyCallback onUse);
 
 	void processMessages();
+	void processMessage(const MSG& msg);
 
 private:
 	int currentId = 0;

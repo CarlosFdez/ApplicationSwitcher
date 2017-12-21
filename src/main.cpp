@@ -9,6 +9,8 @@
 #include "configreader.hpp"
 #include "hotkeys.hpp"
 
+#include "notificationicon.hpp"
+
 using namespace std;
 
 /* todo: This is a separate feature of the application. Make it accessible through some flag */ 
@@ -22,7 +24,7 @@ void printAll() {
 	}
 }
 
-int main(void) {
+int main() {
 	string filepath = "config.json";
 	auto entries = readConfig(filepath);
 
@@ -37,9 +39,16 @@ int main(void) {
 		});
 	}
 
+	NotificationIcon icon("Test");
+
 	hotkeys.processMessages();
 
-	cin.get();
-
 	return 0;
+}
+
+int APIENTRY WinMain(HINSTANCE hInstance,
+					 HINSTANCE hPrevInstance,
+					 LPSTR     lpCmdLine,
+					 int       nCmdShow) {
+	return main();
 }
