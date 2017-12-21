@@ -8,9 +8,6 @@ BOOL CALLBACK _processSingleWindow(HWND hwnd, LPARAM lParam);
 Application getApplicationForWindow(HWND hwnd);
 
 std::vector<Application> getOpenApplications() {
-	// 
-	// https://stackoverflow.com/questions/7277366/why-does-enumwindows-return-more-windows-than-i-expected
-	
 	std::vector<Application> results;
 	auto vectorParam = reinterpret_cast<LPARAM>(&results);
 	EnumWindows(_processSingleWindow, vectorParam);
@@ -53,21 +50,19 @@ Application getApplicationForWindow(HWND hwnd) {
 }
 
 BOOL CALLBACK _processSingleWindow(HWND hwnd, LPARAM lParam) {
-	auto results = reinterpret_cast<std::vector<Application>*>(lParam);
+	// https://stackoverflow.com/questions/7277366/why-does-enumwindows-return-more-windows-than-i-expected
 
 	if (!IsWindowVisible(hwnd)) {
 		return TRUE;
 	}
 
-	// Tool windows should not be displayed either, these do not appear in the task bar.
+	// Tool windows do not appear in the task bar, and should be skipped
 	if (GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW) {
 		return TRUE;
 	}
 
-	auto application = getApplicationForWindow(hwnd);
-
-	// todo: does this copy the data?
-	results->push_back(application);
+	auto results = reinterpret_cast<std::vector<Application>*>(lParam);
+	results->push_back(getApplicationForWindow(hwnd));
 
 	return TRUE;
 }
