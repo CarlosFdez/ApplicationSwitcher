@@ -9,7 +9,7 @@
 #include "configreader.hpp"
 #include "hotkeys.hpp"
 
-#include "notificationicon.hpp"
+#include "windowing.hpp"
 
 using namespace std;
 
@@ -38,8 +38,17 @@ int main() {
 			switcher.switchTo(entry.name);
 		});
 	}
-
+	
 	NotificationIcon icon("Test");
+
+
+	Menu notificationMenu;
+	notificationMenu.addItem("Exit", []() { 
+		cout << "perform exit" << endl;
+	});
+
+	icon.setContextMenu(&notificationMenu);
+	icon.create();
 
 	hotkeys.processMessages();
 
