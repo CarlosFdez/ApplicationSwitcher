@@ -43,8 +43,8 @@ int main() {
 
 
 	Menu notificationMenu;
-	notificationMenu.addItem("Exit", []() { 
-		cout << "perform exit" << endl;
+	notificationMenu.addItem("Exit", [&]() { 
+		hotkeys.stop();
 	});
 
 	icon.setContextMenu(&notificationMenu);

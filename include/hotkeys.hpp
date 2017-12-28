@@ -28,9 +28,13 @@ public:
 	void processMessages();
 	void processMessage(const MSG& msg);
 
+	void stop();
+
 private:
 	int currentId = 0;
 	std::map<int, KeyCallback> bindingMap;
+
+	bool stopped = false;
 };
 
 /* returns the key code of a single key without modifiers */

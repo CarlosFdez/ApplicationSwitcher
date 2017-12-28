@@ -18,7 +18,7 @@ void HotkeySystem::registerKey(const string& key, KeyCallback onUse) {
 
 void HotkeySystem::processMessages() {
 	MSG msg = { 0 };
-	while (GetMessage(&msg, NULL, 0, 0) != 0) {
+	while (!stopped && GetMessage(&msg, NULL, 0, 0) != 0) {
 		this->processMessage(msg);
 	}
 }
@@ -34,6 +34,13 @@ void HotkeySystem::processMessage(const MSG& msg) {
 		// execute registered callback function
 		this->bindingMap[hotkeyId]();
 	}
+}
+
+void HotkeySystem::stop() {
+	stopped = true;
+
+	// this makes the ui loop continue so it can do the stopped check 
+	PostMessage(NULL, WM_NULL, 0, 0);
 }
 
 // todo: create some bimap structure to go both ways allowing repeats
