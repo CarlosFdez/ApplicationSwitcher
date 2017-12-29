@@ -44,13 +44,17 @@ int main() {
 
 	Menu notificationMenu;
 	notificationMenu.addItem("Exit", [&]() { 
-		hotkeys.stop();
+		WindowsApplication::stop();
 	});
 
 	icon.setContextMenu(&notificationMenu);
 	icon.create();
 
-	hotkeys.processMessages();
+	WindowsApplication::addMessageHandler([&](const MSG& msg) {
+		return hotkeys.processMessage(msg);
+	});
+
+	WindowsApplication::run();
 
 	return 0;
 }

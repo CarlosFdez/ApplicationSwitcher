@@ -24,9 +24,9 @@ void HotkeySystem::processMessages() {
 }
 
 
-void HotkeySystem::processMessage(const MSG& msg) {
+bool HotkeySystem::processMessage(const MSG& msg) {
 	if (msg.message != WM_HOTKEY) {
-		return;
+		return false;
 	}
 
 	int hotkeyId = msg.wParam;
@@ -34,6 +34,8 @@ void HotkeySystem::processMessage(const MSG& msg) {
 		// execute registered callback function
 		this->bindingMap[hotkeyId]();
 	}
+
+	return true;
 }
 
 void HotkeySystem::stop() {

@@ -8,10 +8,65 @@
 #include <functional>
 #include <optional>
 
-using MenuItemCallback = std::function<void(void)>;
 
+/*
+Defines a function that processes an arbitrary object.
+Returns true if the message was handled.
+*/
 template<typename T>
 using EventHandler = std::function<bool(const T& evt)>;
+
+template<typename T, typename J>
+using EventIdentifier = std::function<J(const T& evt)>;
+
+class EventResource {
+public:
+	EventResource() {}
+	EventResource(const EventResource& other) = delete;
+	EventResource(EventResource&& other) = default;
+	~EventResource() {}
+};
+
+template<typename T>
+class EventSystem {
+public:
+	EventResource addHandler(const EventHandler<T>& evt);
+
+	virtual void processEvent(const T& evt);
+
+private:
+	void removeHandler(const EventResource& resource);
+
+	std::list<EventHandler<T>> handlers;
+
+	friend class EventResource;
+};
+
+/*
+Defines a windows application.
+Runs and controls the global application event loop.
+*/
+class WindowsApplication {
+public:
+	/*
+	Adds a message handler to the message loop.
+	The message handler cannot be removed, so use it to add new features
+	to the loop.
+	*/
+	static void addMessageHandler(const EventHandler<MSG>& evt);
+
+	static void run();
+	static void stop();
+
+private:
+	static EventSystem<MSG>& getSystem();
+
+	inline static bool stopped = false;
+
+	friend class Menu;
+};
+
+using MenuItemCallback = std::function<void(void)>;
 
 struct WindowEvent {
 	HWND hwnd;
@@ -72,7 +127,6 @@ private:
 
 	MENUITEMINFO info = { 0 };
 
-
 	friend class Menu;
 };
 
@@ -82,7 +136,7 @@ Represents a Menu. Menus must be associated with a window to process events.
 class Menu {
 public:
 	/* Creates a new menu associated with the given window */
-	Menu() {}
+	Menu();
 	Menu(const Menu& other) = delete;
 	Menu(Menu&& other) = default;
 	~Menu();
@@ -98,6 +152,14 @@ public:
 
 	void showPopup(Window &window, int x, int y);
 
+	size_t size() {
+		return items.size();
+	}
+
+	MenuItem& operator[](int idx) {
+		return items[idx];
+	}
+
 protected:
 	void create();
 
@@ -106,6 +168,7 @@ private:
 	std::vector<MenuItem> items;
 
 	HMENU hMenu = NULL;
+	MENUINFO info;
 };
 
 

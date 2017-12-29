@@ -26,7 +26,7 @@ public:
 	void registerKey(const std::string& key, KeyCallback onUse);
 
 	void processMessages();
-	void processMessage(const MSG& msg);
+	bool processMessage(const MSG& msg);
 
 	void stop();
 

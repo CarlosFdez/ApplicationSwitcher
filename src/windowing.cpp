@@ -4,11 +4,70 @@
 
 using namespace std;
 
+template<typename T>
+EventResource EventSystem<T>::addHandler(const EventHandler<T>& evt) {
+	handlers.push_back(evt);
+	auto lastElementIterator = handlers.back();
+
+	EventResource resource;
+	return resource;
+}
+
+template<typename T>
+void EventSystem<T>::removeHandler(const EventResource& resource) {
+	// todo: implement removal
+}
+
+template<typename T>
+void EventSystem<T>::processEvent(const T& evt) {
+	for (auto& handler : this->handlers) {
+		handler(evt);
+	}
+}
+
+/*
+template<typename T, typename J>
+void FilteredEventSystem<T, J>::processEvent(const T& evt) {
+	// global events first
+	EventSystem<T>::processEvent(evt);
+
+	// now filtered events
+	J identifier = identifierFn(evt);
+	if (this->filteredHandlers.find(identifier) != this->filteredHandlers.end()) {
+		for (auto& handler : this->filteredHandlers[identifier]) {
+			handler(evt);
+		}
+	}
+}*/
 const LPCWSTR windowClass = L"__somecustomwindow__";
 
 constexpr int C_NOTIFICATION_INTERACTION = WM_APP + 1001;
 
+void WindowsApplication::addMessageHandler(const EventHandler<MSG>& evt) {
+	EventSystem<MSG>& system = getSystem();
+	system.addHandler(evt);
+}
 
+void WindowsApplication::run() {
+	EventSystem<MSG>& system = getSystem();
+
+	MSG msg = { 0 };
+	while (!stopped && GetMessage(&msg, NULL, 0, 0) != 0) {
+		system.processEvent(msg);
+	}
+}
+
+void WindowsApplication::stop() {
+	stopped = true;
+
+	// this makes the ui loop continue so it can do the stopped check 
+	PostMessage(NULL, WM_NULL, 0, 0);
+}
+
+EventSystem<MSG>& WindowsApplication::getSystem() {
+	static EventSystem<MSG> system;
+	return system;
+}
 
 /* Static helper to receive window events. Bind to the window object and send events there. */
 LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -110,6 +169,61 @@ bool Window::handleEvent(const WindowEvent& evt) {
 	return captured;
 }
 
+/*
+Internal singleton class that registers itself to WindowsApplication.
+Extends the application to support menus
+*/
+class MenuSystem {
+public:
+	// adds a menu to be managed
+	void registerMenu(Menu* item) {
+		// todo: mutex
+		menus[item->getHandle()] = item;
+	}
+
+	// adds a menu to be unmanaged
+	void unregisterMenu(Menu* item) {
+		if (item->getHandle() != NULL) {
+			menus.erase(item->getHandle());
+		}
+	}
+
+	// todo: create the HMENU here and wrap it in an autodisposal object
+
+	static MenuSystem& getInstance() {
+		static MenuSystem system;
+		return system;
+	}
+
+private:
+	MenuSystem() {
+		WindowsApplication::addMessageHandler([this](const MSG &evt) {
+			if (evt.message != WM_MENUCOMMAND) {
+				return false;
+			}
+
+			int idx = evt.wParam;
+			HMENU menuHandle = (HMENU)evt.lParam;
+
+			if (menus.find(menuHandle) == menus.end()) {
+				return false;
+			}
+
+			Menu& menu = *menus[menuHandle];
+			if (idx < 0 || idx >= menus.size()) {
+				// invaliid, we might need to something else
+				return true;
+			}
+
+			menu[idx].execute();
+
+			return true;
+		});
+	}
+
+	std::unordered_map<HMENU, Menu*> menus;
+};
+
 MenuItem::MenuItem(const string& title, const MenuItemCallback& callback) :
 		title(title), callback(callback) {
 	info = { 0 };
@@ -124,8 +238,16 @@ void MenuItem::create(HMENU hMenu, int idx) {
 	InsertMenuItem(hMenu, -1, FALSE, &info);
 }
 
+Menu::Menu() {
+	info = { 0 };
+	info.cbSize = sizeof(MENUINFO);
+	info.fMask = MIM_STYLE;
+	info.dwStyle = MNS_NOTIFYBYPOS;
+}
+
 Menu::~Menu() {
 	if (hMenu != NULL) {
+		MenuSystem::getInstance().unregisterMenu(this);
 		DestroyMenu(hMenu);
 	}
 }
@@ -135,8 +257,11 @@ void Menu::create() {
 		return; // already created
 	}
 
-	int idx = 0;
 	hMenu = CreatePopupMenu();
+	MenuSystem::getInstance().registerMenu(this);
+	SetMenuInfo(hMenu, &(this->info));
+
+	int idx = 0;
 	for (auto &item : this->items) {
 		item.create(hMenu, idx++);
 	}
@@ -150,12 +275,7 @@ void Menu::showPopup(Window &window, int x, int y) {
 	auto items = this->items;
 
 	SetForegroundWindow(hwnd);
-	int result = TrackPopupMenuEx(hMenu, TPM_VERTICAL | TPM_RIGHTBUTTON | TPM_RETURNCMD, x, y, hwnd, NULL);
-	
-	if (result > 0) {
-		int idx = result - 1;
-		items[idx].execute(); // todo: check for overflow
-	}
+	int result = TrackPopupMenuEx(hMenu, TPM_VERTICAL | TPM_RIGHTBUTTON, x, y, hwnd, NULL);
 }
 
 NotificationIcon::NotificationIcon(const string& title) : title(title) {
