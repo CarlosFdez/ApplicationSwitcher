@@ -4,18 +4,13 @@
 
 using namespace std;
 
+const LPCWSTR windowClass = L"__somecustomwindow__";
+
+constexpr int C_NOTIFICATION_INTERACTION = WM_APP + 1001;
+
 template<typename T>
-EventResource EventSystem<T>::addHandler(const EventHandler<T>& evt) {
+void EventSystem<T>::addHandler(const EventHandler<T>& evt) {
 	handlers.push_back(evt);
-	auto lastElementIterator = handlers.back();
-
-	EventResource resource;
-	return resource;
-}
-
-template<typename T>
-void EventSystem<T>::removeHandler(const EventResource& resource) {
-	// todo: implement removal
 }
 
 template<typename T>
@@ -24,24 +19,6 @@ void EventSystem<T>::processEvent(const T& evt) {
 		handler(evt);
 	}
 }
-
-/*
-template<typename T, typename J>
-void FilteredEventSystem<T, J>::processEvent(const T& evt) {
-	// global events first
-	EventSystem<T>::processEvent(evt);
-
-	// now filtered events
-	J identifier = identifierFn(evt);
-	if (this->filteredHandlers.find(identifier) != this->filteredHandlers.end()) {
-		for (auto& handler : this->filteredHandlers[identifier]) {
-			handler(evt);
-		}
-	}
-}*/
-const LPCWSTR windowClass = L"__somecustomwindow__";
-
-constexpr int C_NOTIFICATION_INTERACTION = WM_APP + 1001;
 
 void WindowsApplication::addMessageHandler(const EventHandler<MSG>& evt) {
 	EventSystem<MSG>& system = getSystem();
@@ -90,19 +67,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 		}
 
 		Window* window = reinterpret_cast<Window*>(ptrRaw);
-		if (!window->handleEvent(evt)) {
+		window->handleEvent(evt);
+
+		if (!evt.isHandled()) {
 			return DefWindowProc(hwnd, uMsg, wParam, lParam);
 		}
 	}
 }
 
-Window::Window() {
-	Window::onEvent(WM_CREATE, [this](const WindowEvent& evt) {
-		// The GWLP_USERDATA was already updated so we just update the hwnd
-		this->_hwnd = evt.hwnd;
-		return true;
-	});
-}
+Window::Window() { }
 
 Window::~Window() {
 	if (created) {
@@ -144,29 +117,10 @@ void Window::create() {
 	this->created = true;
 }
 
-void Window::onEvent(const EventHandler<WindowEvent>& handler) {
-	handlers.push_back(handler);
-}
-
-void Window::onEvent(int eventType, const EventHandler<WindowEvent>& handler) {
-	// todo: optimize using a map or something instead
-	Window::onEvent([=](const WindowEvent& evt) {
-		if (evt.uMsg == eventType) {
-			return handler(evt);
-		}
-		return false;
-	});
-}
-
-bool Window::handleEvent(const WindowEvent& evt) {
-	bool captured = false;
-	for (auto &handler : this->handlers) {
-		if (handler(evt)) {
-			captured = true;
-		}
+void Window::handleEvent(WindowEvent& evt) {
+	if (evt.uMsg == WM_CREATE) {
+		this->_hwnd = evt.hwnd;
 	}
-
-	return captured;
 }
 
 /*
@@ -293,30 +247,28 @@ NotificationIcon::~NotificationIcon() {
 	Shell_NotifyIcon(NIM_DELETE, &data);
 }
 
-void NotificationIcon::create() {
-	window.onEvent(WM_CREATE, [this](const WindowEvent& evt) {
+void NotificationIcon::handleEvent(WindowEvent& evt) {
+	Window::handleEvent(evt);
+
+	if (evt.uMsg == WM_CREATE) {
 		auto& data = this->data;
-		data.hWnd = this->window.hwnd();
+		data.hWnd = this->hwnd();
 		data.hIcon = LoadIcon(NULL, MAKEINTRESOURCE(IDI_APPLICATION));
 
 		Shell_NotifyIcon(NIM_ADD, &data);
 		Shell_NotifyIcon(NIM_SETVERSION, &data);
 
-		return true;
-	});
-
-	window.onEvent(C_NOTIFICATION_INTERACTION, [this](const WindowEvent& evt) {
+		evt.setHandled();
+	}
+	else if (evt.uMsg == C_NOTIFICATION_INTERACTION) {
 		// an action was received
 		auto action = LOWORD(evt.lParam);
 		if (action == WM_CONTEXTMENU) {
 			this->showMenu();
-			return true;
 		}
 
-		return false;
-	});
-
-	window.create();
+		evt.setHandled();
+	}
 }
 
 void NotificationIcon::showMenu() {
@@ -324,7 +276,7 @@ void NotificationIcon::showMenu() {
 		POINT pt;
 		GetCursorPos(&pt);
 
-		this->contextMenu->showPopup(this->window, pt.x, pt.y);
+		this->contextMenu->showPopup(*this, pt.x, pt.y);
 	}
 
 	

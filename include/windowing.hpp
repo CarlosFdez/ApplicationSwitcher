@@ -16,27 +16,17 @@ Returns true if the message was handled.
 template<typename T>
 using EventHandler = std::function<bool(const T& evt)>;
 
-template<typename T, typename J>
-using EventIdentifier = std::function<J(const T& evt)>;
-
-class EventResource {
-public:
-	EventResource() {}
-	EventResource(const EventResource& other) = delete;
-	EventResource(EventResource&& other) = default;
-	~EventResource() {}
-};
-
+/* Defines an object that pushes events to registered handlers */
 template<typename T>
 class EventSystem {
 public:
-	EventResource addHandler(const EventHandler<T>& evt);
+	// todo: design an implementation for a remove handler mechanism
+
+	void addHandler(const EventHandler<T>& evt);
 
 	virtual void processEvent(const T& evt);
 
 private:
-	void removeHandler(const EventResource& resource);
-
 	std::list<EventHandler<T>> handlers;
 
 	friend class EventResource;
@@ -50,8 +40,7 @@ class WindowsApplication {
 public:
 	/*
 	Adds a message handler to the message loop.
-	The message handler cannot be removed, so use it to add new features
-	to the loop.
+	Use it to add new features to the loop.
 	*/
 	static void addMessageHandler(const EventHandler<MSG>& evt);
 
@@ -66,13 +55,28 @@ private:
 	friend class Menu;
 };
 
-using MenuItemCallback = std::function<void(void)>;
-
 struct WindowEvent {
+	/* The window handle that generated the event */
 	HWND hwnd;
+
+	/* The type of event that was generated*/
 	UINT uMsg;
+
 	WPARAM wParam;
 	LPARAM lParam;
+
+	/* Flags this event as handled. Unhandled events go to DefWndProc. */
+	void setHandled() {
+		_isHandled = true;
+	}
+
+	/* Checks if this event as handled. Unhandled events go to DefWndProc. */
+	bool isHandled() {
+		return _isHandled;
+	}
+
+private:
+	bool _isHandled = false;
 };
 
 /*
@@ -89,12 +93,10 @@ public:
 	HWND hwnd() const { return this->_hwnd; }
 	
 	/** Creates new window, allocating the required resources */
-	void create();
+	virtual void create();
 
-	void onEvent(const EventHandler<WindowEvent>& handler);
-	void onEvent(int eventType, const EventHandler<WindowEvent>& handler);
-
-	bool handleEvent(const WindowEvent& evt);
+	/* Handles the triggered window event. Override to add new functionality */
+	virtual void handleEvent(WindowEvent& evt);
 
 private:
 	bool created = false;
@@ -104,6 +106,7 @@ private:
 	std::list<EventHandler<WindowEvent>> handlers;
 };
 
+using MenuItemCallback = std::function<void(void)>;
 
 class MenuItem {
 public:
@@ -164,7 +167,6 @@ protected:
 	void create();
 
 private:
-	Window * window;
 	std::vector<MenuItem> items;
 
 	HMENU hMenu = NULL;
@@ -175,20 +177,21 @@ private:
 /*
 Represents a Win32 notification icon (system tray icon).
 */
-class NotificationIcon {
+class NotificationIcon : public Window {
 public:
 	NotificationIcon(const std::string& title);
 	~NotificationIcon();
 
-	void create();
 	void showMenu();
 
 	void setContextMenu(Menu* menu) {
 		this->contextMenu = menu;
 	}
 
+	/* Handles the triggered window event. Override to add new functionality */
+	virtual void handleEvent(WindowEvent& evt);
+
 private:
-	Window window;
 	std::string title;
 
 	Menu* contextMenu = NULL;
